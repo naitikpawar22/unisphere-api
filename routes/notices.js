@@ -19,9 +19,10 @@ const Notice = mongoose.model('Notice', noticeSchema);
 router.get('/', async (req, res) => {
     try {
         const notices = await Notice.find().sort({ createdAt: -1 });
-        res.json(notices);
+        return res.status(200).json(notices);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error(err);
+        return res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
 
@@ -30,43 +31,48 @@ router.get('/:id', async (req, res) => {
     try {
         const notice = await Notice.findById(req.params.id);
         if (!notice) return res.status(404).json({ message: 'Notice not found' });
-        res.json(notice);
+        return res.status(200).json(notice);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error(err);
+        return res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
 
 // POST - create a new notice
 router.post('/', async (req, res) => {
-    const { Topic, Notice: NoticeText, Tag, Link } = req.body;
+    const { Topic, Notice: noticeText, Tag, Link } = req.body;
 
-    if (!Topic || !NoticeText) {
+    if (!Topic || !noticeText) {
         return res.status(400).json({ message: 'Topic and Notice are required.' });
     }
 
     try {
-        const newNotice = new Notice({ Topic, Notice: NoticeText, Tag, Link });
+        const newNotice = new Notice({ Topic, Notice: noticeText, Tag, Link });
         const savedNotice = await newNotice.save();
-        res.status(201).json({ message: 'Notice created successfully', notice: savedNotice });
+        return res.status(201).json({ message: 'Notice created successfully', notice: savedNotice });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error(err);
+        return res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
 
 // PUT - update an existing notice
 router.put('/:id', async (req, res) => {
-    const { Topic, Notice: NoticeText, Tag, Link } = req.body;
+    const { Topic, Notice: noticeText, Tag, Link } = req.body;
 
     try {
         const updatedNotice = await Notice.findByIdAndUpdate(
             req.params.id,
-            { Topic, Notice: NoticeText, Tag, Link },
+            { Topic, Notice: noticeText, Tag, Link },
             { new: true, runValidators: true }
         );
+
         if (!updatedNotice) return res.status(404).json({ message: 'Notice not found' });
-        res.json({ message: 'Notice updated successfully', notice: updatedNotice });
+
+        return res.status(200).json({ message: 'Notice updated successfully', notice: updatedNotice });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error(err);
+        return res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
 
@@ -75,9 +81,10 @@ router.delete('/:id', async (req, res) => {
     try {
         const deletedNotice = await Notice.findByIdAndDelete(req.params.id);
         if (!deletedNotice) return res.status(404).json({ message: 'Notice not found' });
-        res.json({ message: 'Notice deleted successfully' });
+        return res.status(200).json({ message: 'Notice deleted successfully' });
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error(err);
+        return res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
 
